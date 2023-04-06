@@ -134,6 +134,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="billboard_list.cpp" />
+    <ClCompile Include="billboard_technique.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="cubemap_texture.cpp" />
     <ClCompile Include="glut_backend.cpp" />
@@ -150,6 +152,8 @@
     <ClCompile Include="texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="billboard_list.h" />
+    <ClInclude Include="billboard_technique.h" />
     <ClInclude Include="callbacks.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="cubemap_texture.h" />
