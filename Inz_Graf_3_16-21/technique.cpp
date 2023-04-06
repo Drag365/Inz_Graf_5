@@ -3,8 +3,10 @@
 #include <assert.h>
 
 #include "technique.h"
+#include "util.h"
 
 static const char* pVSName = "VS";
+static const char* pGSName = "GS";
 static const char* pFSName = "FS";
 
 const char* ShaderType2ShaderName(GLuint Type)
@@ -12,6 +14,8 @@ const char* ShaderType2ShaderName(GLuint Type)
     switch (Type) {
     case GL_VERTEX_SHADER:
         return pVSName;
+    case GL_GEOMETRY_SHADER:
+        return pGSName;
     case GL_FRAGMENT_SHADER:
         return pFSName;
     default:
@@ -20,6 +24,8 @@ const char* ShaderType2ShaderName(GLuint Type)
 
     return NULL;
 }
+
+
 Technique::Technique()
 {
     m_shaderProg = 0;
@@ -89,7 +95,7 @@ bool Technique::AddShader(GLenum ShaderType, const char* pShaderText)
 
     glAttachShader(m_shaderProg, ShaderObj);
 
-    return true;
+    return GLCheckError();
 }
 
 
@@ -125,7 +131,7 @@ bool Technique::Finalize()
 
     m_shaderObjList.clear();
 
-    return true;
+    return GLCheckError();
 }
 
 
@@ -137,11 +143,18 @@ void Technique::Enable()
 
 GLint Technique::GetUniformLocation(const char* pUniformName)
 {
-    GLint Location = glGetUniformLocation(m_shaderProg, pUniformName);
+    GLuint Location = glGetUniformLocation(m_shaderProg, pUniformName);
 
-    if (Location == (GLint)0xFFFFFFFF) {
+    if (Location == INVALID_OGL_VALUE) {
         fprintf(stderr, "Warning! Unable to get the location of uniform '%s'\n", pUniformName);
     }
 
     return Location;
+}
+
+GLint Technique::GetProgramParam(GLint param)
+{
+    GLint ret;
+    glGetProgramiv(m_shaderProg, param, &ret);
+    return ret;
 }

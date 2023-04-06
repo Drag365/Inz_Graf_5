@@ -1,7 +1,16 @@
-﻿#include <math.h>
+﻿#include <stdlib.h>
+#include <math.h>
+#include <assert.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
+#include <process.h>
 
+#ifdef __GNUC__
+#  if __GNUC_PREREQ(4,7)
+#include <unistd.h>
+#  endif
+#endif
+#include "time.h"
 #include "engine_common.h"
 #include "util.h"
 #include "pipeline.h"
@@ -10,17 +19,25 @@
 #include "lighting_technique.h"
 #include "glut_backend.h"
 #include "mesh.h"
-#include "billboard_list.h"
+#include "particle_system.h"
 
-#define WINDOW_WIDTH  1280
-#define WINDOW_HEIGHT 1024
+#define WINDOW_WIDTH  1920
+#define WINDOW_HEIGHT 1200
 
+static long long GetCurrentTimeMillis()
+{
+    timeval t;
+    gettimeofday(&t, NULL);
 
-class Tutorial27 : public ICallbacks
+    long long ret = t.tv_sec * 1000 + t.tv_usec / 1000;
+    return ret;
+}
+
+class Tutorial28 : public ICallbacks
 {
 public:
 
-    Tutorial27()
+    Tutorial28()
     {
         m_pLightingTechnique = NULL;
         m_pGameCamera = NULL;
@@ -38,10 +55,12 @@ public:
         m_persProjInfo.Width = WINDOW_WIDTH;
         m_persProjInfo.zNear = 1.0f;
         m_persProjInfo.zFar = 100.0f;
+
+        m_currentTimeMillis = GetCurrentTimeMillis();
     }
 
 
-    ~Tutorial27()
+    ~Tutorial28()
     {
         SAFE_DELETE(m_pLightingTechnique);
         SAFE_DELETE(m_pGameCamera);
@@ -53,8 +72,8 @@ public:
 
     bool Init()
     {
-        Vector3f Pos(0.0f, 1.0f, -1.0f);
-        Vector3f Target(0.0f, -0.5f, 1.0f);
+        Vector3f Pos(0.0f, 0.4f, -0.5f);
+        Vector3f Target(0.0f, 0.2f, 1.0f);
         Vector3f Up(0.0, 1.0f, 0.0f);
 
         m_pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT, Pos, Target, Up);
@@ -68,16 +87,12 @@ public:
 
         m_pLightingTechnique->Enable();
         m_pLightingTechnique->SetDirectionalLight(m_dirLight);
-        m_pLightingTechnique->SetColorTextureUnit(0);
-        m_pLightingTechnique->SetNormalMapTextureUnit(2);
+        m_pLightingTechnique->SetColorTextureUnit(COLOR_TEXTURE_UNIT_INDEX);
+        m_pLightingTechnique->SetNormalMapTextureUnit(NORMAL_TEXTURE_UNIT_INDEX);
 
         m_pGround = new Mesh();
 
         if (!m_pGround->LoadMesh("C:/Content/quad.obj")) {
-            return false;
-        }
-
-        if (!m_billboardList.Init("C:/Content/monster_hellknight.png")) {
             return false;
         }
 
@@ -95,7 +110,9 @@ public:
             return false;
         }
 
-        return true;
+        Vector3f ParticleSystemPos = Vector3f(0.0f, 0.0f, 1.0f);
+
+        return m_particleSystem.InitParticleSystem(ParticleSystemPos);
     }
 
 
@@ -107,6 +124,10 @@ public:
 
     virtual void RenderSceneCB()
     {
+        long long TimeNowMillis = GetCurrentTimeMillis();
+        assert(TimeNowMillis >= m_currentTimeMillis);
+        unsigned int DeltaTimeMillis = (unsigned int)(TimeNowMillis - m_currentTimeMillis);
+        m_currentTimeMillis = TimeNowMillis;
         m_pGameCamera->OnRender();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -124,9 +145,11 @@ public:
 
         m_pLightingTechnique->SetWVP(p.GetWVPTrans());
         m_pLightingTechnique->SetWorldMatrix(p.GetWorldTrans());
+
         m_pGround->Render();
 
-        m_billboardList.Render(p.GetVPTrans(), m_pGameCamera->GetPos());
+        m_particleSystem.Render(DeltaTimeMillis, p.GetVPTrans(), m_pGameCamera->GetPos());
+
         glutSwapBuffers();
     }
 
@@ -160,6 +183,7 @@ public:
 
 private:
 
+    long long m_currentTimeMillis;
     LightingTechnique* m_pLightingTechnique;
     Camera* m_pGameCamera;
     DirectionalLight m_dirLight;
@@ -167,19 +191,21 @@ private:
     Texture* m_pTexture;
     Texture* m_pNormalMap;
     PersProjInfo m_persProjInfo;
-    BillboardList m_billboardList;
+    ParticleSystem m_particleSystem;
 };
 
 
 int main(int argc, char** argv)
 {
+    srand(_getpid());
+
     GLUTBackendInit(argc, argv);
 
-    if (!GLUTBackendCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 32, false, "Tutorial 27")) {
+    if (!GLUTBackendCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 32, false, "Tutorial 28")) {
         return 1;
     }
 
-    Tutorial27* pApp = new Tutorial27();
+    Tutorial28* pApp = new Tutorial28();
 
     if (!pApp->Init()) {
         return 1;
