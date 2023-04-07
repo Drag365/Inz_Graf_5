@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/Inz_Graf_3_16-21/ds_light_pass_tech.h
+/Inz_Graf_3_16-21/ds_light_pass_tech.cpp
+/Inz_Graf_3_16-21/ds_geom_pass_tech.h
+/Inz_Graf_3_16-21/ds_geom_pass_tech.cpp
+/Inz_Graf_3_16-21/ds_dir_light_pass_tech.h
+/Inz_Graf_3_16-21/ds_dir_light_pass_tech.cpp
