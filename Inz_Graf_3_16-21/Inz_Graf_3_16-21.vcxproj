@@ -134,46 +134,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="billboard_list.cpp" />
-    <ClCompile Include="billboard_technique.cpp" />
     <ClCompile Include="camera.cpp" />
-    <ClCompile Include="cubemap_texture.cpp" />
+    <ClCompile Include="ds_geom_pass_tech.cpp" />
+    <ClCompile Include="gbuffer.cpp" />
     <ClCompile Include="glut_backend.cpp" />
     <ClCompile Include="InzhGraf_5.cpp" />
-    <ClCompile Include="lighting_technique.cpp" />
     <ClCompile Include="math_3d.cpp" />
     <ClCompile Include="mesh.cpp" />
-    <ClCompile Include="particle_system.cpp" />
     <ClCompile Include="pipeline.cpp" />
-    <ClCompile Include="ps_update_technique.cpp" />
-    <ClCompile Include="random_texture.cpp" />
-    <ClCompile Include="shadow_map_fbo.cpp" />
-    <ClCompile Include="shadow_map_technique.cpp" />
-    <ClCompile Include="skybox.cpp" />
-    <ClCompile Include="skybox_technique.cpp" />
     <ClCompile Include="technique.cpp" />
     <ClCompile Include="texture.cpp" />
     <ClCompile Include="time.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="billboard_list.h" />
-    <ClInclude Include="billboard_technique.h" />
     <ClInclude Include="callbacks.h" />
     <ClInclude Include="camera.h" />
-    <ClInclude Include="cubemap_texture.h" />
+    <ClInclude Include="ds_geom_pass_tech.h" />
     <ClInclude Include="engine_common.h" />
+    <ClInclude Include="gbuffer.h" />
     <ClInclude Include="glut_backend.h" />
-    <ClInclude Include="lighting_technique.h" />
     <ClInclude Include="math_3d.h" />
     <ClInclude Include="mesh.h" />
-    <ClInclude Include="particle_system.h" />
     <ClInclude Include="pipeline.h" />
-    <ClInclude Include="ps_update_technique.h" />
-    <ClInclude Include="random_texture.h" />
-    <ClInclude Include="shadow_map_fbo.h" />
-    <ClInclude Include="shadow_map_technique.h" />
-    <ClInclude Include="skybox.h" />
-    <ClInclude Include="skybox_technique.h" />
     <ClInclude Include="technique.h" />
     <ClInclude Include="texture.h" />
     <ClInclude Include="time.h" />
@@ -189,6 +171,8 @@
     <Import Project="..\packages\nupengl.core.0.1.0.1\build\native\nupengl.core.targets" Condition="Exists('..\packages\nupengl.core.0.1.0.1\build\native\nupengl.core.targets')" />
     <Import Project="..\packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets" Condition="Exists('..\packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets')" />
     <Import Project="..\packages\Assimp.3.0.0\build\native\Assimp.targets" Condition="Exists('..\packages\Assimp.3.0.0\build\native\Assimp.targets')" />
+    <Import Project="..\packages\glfx.redist.0.75\build\native\glfx.redist.targets" Condition="Exists('..\packages\glfx.redist.0.75\build\native\glfx.redist.targets')" />
+    <Import Project="..\packages\glfx.0.75\build\native\glfx.targets" Condition="Exists('..\packages\glfx.0.75\build\native\glfx.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -198,5 +182,7 @@
     <Error Condition="!Exists('..\packages\nupengl.core.0.1.0.1\build\native\nupengl.core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\nupengl.core.0.1.0.1\build\native\nupengl.core.targets'))" />
     <Error Condition="!Exists('..\packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets'))" />
     <Error Condition="!Exists('..\packages\Assimp.3.0.0\build\native\Assimp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Assimp.3.0.0\build\native\Assimp.targets'))" />
+    <Error Condition="!Exists('..\packages\glfx.redist.0.75\build\native\glfx.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\glfx.redist.0.75\build\native\glfx.redist.targets'))" />
+    <Error Condition="!Exists('..\packages\glfx.0.75\build\native\glfx.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\glfx.0.75\build\native\glfx.targets'))" />
   </Target>
 </Project>

@@ -1,32 +1,34 @@
 ﻿#include <math.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
+#include <string>
 
 #include "engine_common.h"
 #include "util.h"
 #include "pipeline.h"
 #include "camera.h"
 #include "texture.h"
-#include "lighting_technique.h"
+#include "ds_geom_pass_tech.h"
 #include "glut_backend.h"
 #include "mesh.h"
+#ifdef FREETYPE
+#include "freetypeGL.h"
+#endif
+#include "gbuffer.h"
 
-#define WINDOW_WIDTH  1920
-#define WINDOW_HEIGHT 1200
+using namespace std;
 
-class Tutorial32 : public ICallbacks
+#define WINDOW_WIDTH  1280  
+#define WINDOW_HEIGHT 1024
+
+class Tutorial35 : public ICallbacks
 {
 public:
 
-    Tutorial32()
+    Tutorial35()
     {
         m_pGameCamera = NULL;
-        m_pEffect = NULL;
         m_scale = 0.0f;
-        m_directionalLight.Color = Vector3f(1.0f, 1.0f, 1.0f);
-        m_directionalLight.AmbientIntensity = 0.25f;
-        m_directionalLight.DiffuseIntensity = 0.9f;
-        m_directionalLight.Direction = Vector3f(1.0f, 0.0, 0.0);
 
         m_persProjInfo.FOV = 60.0f;
         m_persProjInfo.Height = WINDOW_HEIGHT;
@@ -34,59 +36,42 @@ public:
         m_persProjInfo.zNear = 1.0f;
         m_persProjInfo.zFar = 100.0f;
 
-        m_pMesh1 = NULL;
-        m_pMesh2 = NULL;
-        m_pMesh3 = NULL;
+        m_frameCount = 0;
+        m_fps = 0.0f;
+
+        m_time = glutGet(GLUT_ELAPSED_TIME);
     }
 
-    ~Tutorial32()
+    ~Tutorial35()
     {
-        SAFE_DELETE(m_pEffect);
         SAFE_DELETE(m_pGameCamera);
-        SAFE_DELETE(m_pMesh1);
-        SAFE_DELETE(m_pMesh2);
-        SAFE_DELETE(m_pMesh3);
     }
 
     bool Init()
     {
-        Vector3f Pos(3.0f, 7.0f, -10.0f);
-        Vector3f Target(0.0f, -0.2f, 1.0f);
-        Vector3f Up(0.0, 1.0f, 0.0f);
-
-        m_pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT, Pos, Target, Up);
-
-        m_pEffect = new LightingTechnique();
-
-        if (!m_pEffect->Init()) {
-            printf("Error initializing the lighting technique\n");
+        if (!m_gbuffer.Init(WINDOW_WIDTH, WINDOW_HEIGHT)) {
             return false;
         }
 
-        m_pEffect->Enable();
+        m_pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-        m_pEffect->SetColorTextureUnit(COLOR_TEXTURE_UNIT_INDEX);
-        m_pEffect->SetDirectionalLight(m_directionalLight);
-        m_pEffect->SetMatSpecularIntensity(0.0f);
-        m_pEffect->SetMatSpecularPower(0);
-
-        m_pMesh1 = new Mesh();
-
-        if (!m_pMesh1->LoadMesh("C:/Content/phoenix_ugv.md2")) {
+        if (!m_DSGeomPassTech.Init()) {
+            printf("Error initializing DSGeomPassTech\n");
             return false;
         }
 
-        m_pMesh2 = new Mesh();
+        m_DSGeomPassTech.Enable();
+        m_DSGeomPassTech.SetColorTextureUnit(COLOR_TEXTURE_UNIT_INDEX);
 
-        if (!m_pMesh2->LoadMesh("C:/Content/jeep.obj")) {
+        if (!m_mesh.LoadMesh("C:/Content/phoenix_ugv.md2")) {
             return false;
         }
 
-        m_pMesh3 = new Mesh();
-
-        if (!m_pMesh3->LoadMesh("C:/Content/hheli.obj")) {
+#ifdef FREETYPE
+        if (!m_fontRenderer.InitFontRenderer()) {
             return false;
         }
+#endif
 
         return true;
     }
@@ -96,40 +81,65 @@ public:
         GLUTBackendRun(this);
     }
 
+
     virtual void RenderSceneCB()
     {
-        m_scale += 0.01f;
+        CalcFPS();
+
+        m_scale += 0.05f;
 
         m_pGameCamera->OnRender();
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        DSGeometryPass();
+        DSLightPass();
 
-        m_pEffect->SetEyeWorldPos(m_pGameCamera->GetPos());
-
-        Pipeline p;
-        p.SetCamera(m_pGameCamera->GetPos(), m_pGameCamera->GetTarget(), m_pGameCamera->GetUp());
-        p.Rotate(0.0f, m_scale, 0.0f);
-        p.SetPerspectiveProj(m_persProjInfo);
-
-        p.Scale(0.1f, 0.1f, 0.1f);
-        p.WorldPos(-6.0f, -2.0f, 10.0f);
-        m_pEffect->SetWVP(p.GetWVPTrans());
-        m_pEffect->SetWorldMatrix(p.GetWorldTrans());
-        m_pMesh1->Render();
-
-        p.Scale(0.01f, 0.01f, 0.01f);
-        p.WorldPos(6.0f, -2.0f, 10.0f);
-        m_pEffect->SetWVP(p.GetWVPTrans());
-        m_pEffect->SetWorldMatrix(p.GetWorldTrans());
-        m_pMesh2->Render();
-
-        p.Scale(0.04f, 0.04f, 0.04f);
-        p.WorldPos(0.0f, 6.0f, 10.0f);
-        m_pEffect->SetWVP(p.GetWVPTrans());
-        m_pEffect->SetWorldMatrix(p.GetWorldTrans());
-        m_pMesh3->Render();
+        RenderFPS();
 
         glutSwapBuffers();
+    }
+
+
+    void DSGeometryPass()
+    {
+        m_DSGeomPassTech.Enable();
+
+        m_gbuffer.BindForWriting();
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        Pipeline p;
+        p.Scale(0.1f, 0.1f, 0.1f);
+        p.Rotate(0.0f, m_scale, 0.0f);
+        p.WorldPos(-0.8f, -1.0f, 12.0f);
+        p.SetCamera(m_pGameCamera->GetPos(), m_pGameCamera->GetTarget(), m_pGameCamera->GetUp());
+        p.SetPerspectiveProj(m_persProjInfo);
+        m_DSGeomPassTech.SetWVP(p.GetWVPTrans());
+        m_DSGeomPassTech.SetWorldMatrix(p.GetWorldTrans());
+        m_mesh.Render();
+    }
+
+    void DSLightPass()
+    {
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        m_gbuffer.BindForReading();
+
+        GLint HalfWidth = (GLint)(WINDOW_WIDTH / 2.0f);
+        GLint HalfHeight = (GLint)(WINDOW_HEIGHT / 2.0f);
+
+        m_gbuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
+        glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, HalfWidth, HalfHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+        m_gbuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE);
+        glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, HalfHeight, HalfWidth, WINDOW_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+        m_gbuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
+        glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, HalfWidth, HalfHeight, WINDOW_WIDTH, WINDOW_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+        m_gbuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
+        glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, HalfWidth, 0, WINDOW_WIDTH, HalfHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
     }
 
     virtual void IdleCB()
@@ -163,29 +173,58 @@ public:
     {
     }
 
-
 private:
 
-    LightingTechnique* m_pEffect;
+    void CalcFPS()
+    {
+        m_frameCount++;
+
+        int time = glutGet(GLUT_ELAPSED_TIME);
+
+        if (time - m_time > 1000) {
+            m_fps = (float)m_frameCount * 1000.0f / (time - m_time);
+            m_time = time;
+            m_frameCount = 0;
+        }
+    }
+
+    void RenderFPS()
+    {
+        char text[32];
+        ZERO_MEM(text);
+        snprintf(text, sizeof(text), "FPS: %.2f", m_fps);
+#ifdef FREETYPE
+        m_fontRenderer.RenderText(10, 10, text);
+#endif
+    }
+
+    DSGeomPassTech m_DSGeomPassTech;
     Camera* m_pGameCamera;
     float m_scale;
-    DirectionalLight m_directionalLight;
-    Mesh* m_pMesh1;
-    Mesh* m_pMesh2;
-    Mesh* m_pMesh3;
+    Mesh m_mesh;
     PersProjInfo m_persProjInfo;
+#ifdef FREETYPE
+    FontRenderer m_fontRenderer;
+#endif
+    int m_time;
+    int m_frameCount;
+    float m_fps;
+    GBuffer m_gbuffer;
 };
 
 
 int main(int argc, char** argv)
 {
+    Magick::InitializeMagick(*argv);
     GLUTBackendInit(argc, argv);
 
-    if (!GLUTBackendCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 32, false, "Tutorial 32")) {
+    if (!GLUTBackendCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 32, false, "Tutorial 35")) {
         return 1;
     }
 
-    Tutorial32* pApp = new Tutorial32();
+    srand;
+
+    Tutorial35* pApp = new Tutorial35();
 
     if (!pApp->Init()) {
         return 1;

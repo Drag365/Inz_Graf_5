@@ -33,46 +33,19 @@
     <ClCompile Include="glut_backend.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="lighting_technique.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="technique.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="mesh.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="shadow_map_fbo.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="shadow_map_technique.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="cubemap_texture.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="skybox_technique.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="skybox.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="billboard_list.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="billboard_technique.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="particle_system.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="ps_update_technique.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="random_texture.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="time.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="ds_geom_pass_tech.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="gbuffer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -95,9 +68,6 @@
     <ClInclude Include="glut_backend.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="lighting_technique.h">
-      <Filter>Исходные файлы</Filter>
-    </ClInclude>
     <ClInclude Include="technique.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
@@ -107,43 +77,19 @@
     <ClInclude Include="mesh.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="shadow_map_fbo.h">
-      <Filter>Исходные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="shadow_map_technique.h">
-      <Filter>Исходные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="cubemap_texture.h">
-      <Filter>Исходные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="skybox_technique.h">
-      <Filter>Исходные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="skybox.h">
-      <Filter>Исходные файлы</Filter>
-    </ClInclude>
     <ClInclude Include="engine_common.h">
-      <Filter>Исходные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="billboard_list.h">
-      <Filter>Исходные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="billboard_technique.h">
-      <Filter>Исходные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="particle_system.h">
-      <Filter>Исходные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="ps_update_technique.h">
-      <Filter>Исходные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="random_texture.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
     <ClInclude Include="time.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
     <ClInclude Include="times.h">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="ds_geom_pass_tech.h">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="gbuffer.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
   </ItemGroup>
