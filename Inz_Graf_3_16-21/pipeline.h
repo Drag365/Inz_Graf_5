@@ -1,3 +1,4 @@
+
 #ifndef PIPELINE_H
 #define	PIPELINE_H
 
@@ -25,6 +26,11 @@ public:
         m_worldPos.x = x;
         m_worldPos.y = y;
         m_worldPos.z = z;
+    }
+
+    void WorldPos(const Vector3f& Pos)
+    {
+        m_worldPos = Pos;
     }
 
     void Rotate(float RotateX, float RotateY, float RotateZ)

@@ -1,4 +1,4 @@
-﻿#include <math.h>
+#include <math.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
@@ -193,7 +193,7 @@ private:
     void RenderFPS()
     {
         char text[32];
-        SNPRINTF(text, sizeof(text), "FPS: %.2f", m_fps);
+        snprintf(text, sizeof(text), "FPS: %.2f", m_fps);
 #ifdef FREETYPE
         m_fontRenderer.RenderText(10, 10, text);
 #endif
@@ -242,7 +242,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    SRANDOM;
+    srand;
 
     Tutorial33* pApp = new Tutorial33();
 
