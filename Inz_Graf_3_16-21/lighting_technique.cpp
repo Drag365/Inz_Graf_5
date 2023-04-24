@@ -1,7 +1,6 @@
 #include <limits.h>
 #include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+
 #include "math_3d.h"
 #include "lighting_technique.h"
 #include "util.h"
@@ -211,25 +210,25 @@ bool LightingTechnique::Init()
     for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_pointLightsLocation); i++) {
         char Name[128];
         memset(Name, 0, sizeof(Name));
-        snprintf(Name, sizeof(Name), "gPointLights[%d].Base.Color", i);
+        SNPRINTF(Name, sizeof(Name), "gPointLights[%d].Base.Color", i);
         m_pointLightsLocation[i].Color = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gPointLights[%d].Base.AmbientIntensity", i);
+        SNPRINTF(Name, sizeof(Name), "gPointLights[%d].Base.AmbientIntensity", i);
         m_pointLightsLocation[i].AmbientIntensity = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gPointLights[%d].Position", i);
+        SNPRINTF(Name, sizeof(Name), "gPointLights[%d].Position", i);
         m_pointLightsLocation[i].Position = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gPointLights[%d].Base.DiffuseIntensity", i);
+        SNPRINTF(Name, sizeof(Name), "gPointLights[%d].Base.DiffuseIntensity", i);
         m_pointLightsLocation[i].DiffuseIntensity = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gPointLights[%d].Atten.Constant", i);
+        SNPRINTF(Name, sizeof(Name), "gPointLights[%d].Atten.Constant", i);
         m_pointLightsLocation[i].Atten.Constant = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gPointLights[%d].Atten.Linear", i);
+        SNPRINTF(Name, sizeof(Name), "gPointLights[%d].Atten.Linear", i);
         m_pointLightsLocation[i].Atten.Linear = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gPointLights[%d].Atten.Exp", i);
+        SNPRINTF(Name, sizeof(Name), "gPointLights[%d].Atten.Exp", i);
         m_pointLightsLocation[i].Atten.Exp = GetUniformLocation(Name);
 
         if (m_pointLightsLocation[i].Color == INVALID_UNIFORM_LOCATION ||
@@ -246,31 +245,31 @@ bool LightingTechnique::Init()
     for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_spotLightsLocation); i++) {
         char Name[128];
         memset(Name, 0, sizeof(Name));
-        snprintf(Name, sizeof(Name), "gSpotLights[%d].Base.Base.Color", i);
+        SNPRINTF(Name, sizeof(Name), "gSpotLights[%d].Base.Base.Color", i);
         m_spotLightsLocation[i].Color = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gSpotLights[%d].Base.Base.AmbientIntensity", i);
+        SNPRINTF(Name, sizeof(Name), "gSpotLights[%d].Base.Base.AmbientIntensity", i);
         m_spotLightsLocation[i].AmbientIntensity = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gSpotLights[%d].Base.Position", i);
+        SNPRINTF(Name, sizeof(Name), "gSpotLights[%d].Base.Position", i);
         m_spotLightsLocation[i].Position = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gSpotLights[%d].Direction", i);
+        SNPRINTF(Name, sizeof(Name), "gSpotLights[%d].Direction", i);
         m_spotLightsLocation[i].Direction = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gSpotLights[%d].Cutoff", i);
+        SNPRINTF(Name, sizeof(Name), "gSpotLights[%d].Cutoff", i);
         m_spotLightsLocation[i].Cutoff = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gSpotLights[%d].Base.Base.DiffuseIntensity", i);
+        SNPRINTF(Name, sizeof(Name), "gSpotLights[%d].Base.Base.DiffuseIntensity", i);
         m_spotLightsLocation[i].DiffuseIntensity = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gSpotLights[%d].Base.Atten.Constant", i);
+        SNPRINTF(Name, sizeof(Name), "gSpotLights[%d].Base.Atten.Constant", i);
         m_spotLightsLocation[i].Atten.Constant = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gSpotLights[%d].Base.Atten.Linear", i);
+        SNPRINTF(Name, sizeof(Name), "gSpotLights[%d].Base.Atten.Linear", i);
         m_spotLightsLocation[i].Atten.Linear = GetUniformLocation(Name);
 
-        snprintf(Name, sizeof(Name), "gSpotLights[%d].Base.Atten.Exp", i);
+        SNPRINTF(Name, sizeof(Name), "gSpotLights[%d].Base.Atten.Exp", i);
         m_spotLightsLocation[i].Atten.Exp = GetUniformLocation(Name);
 
         if (m_spotLightsLocation[i].Color == INVALID_UNIFORM_LOCATION ||
@@ -289,7 +288,7 @@ bool LightingTechnique::Init()
     for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_colorLocation); i++) {
         char Name[32];
         memset(Name, 0, sizeof(Name));
-        snprintf(Name, sizeof(Name), "gColor[%d]", i);
+        SNPRINTF(Name, sizeof(Name), "gColor[%d]", i);
 
         m_colorLocation[i] = GetUniformLocation(Name);
 

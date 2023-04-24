@@ -1,78 +1,126 @@
 ﻿#include <math.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
-#include <string>
 
 #include "engine_common.h"
 #include "util.h"
 #include "pipeline.h"
 #include "camera.h"
 #include "texture.h"
-#include "ds_geom_pass_tech.h"
+#include "lighting_technique.h"
 #include "glut_backend.h"
 #include "mesh.h"
 #ifdef FREETYPE
 #include "freetypeGL.h"
 #endif
-#include "gbuffer.h"
-
-using namespace std;
 
 #define WINDOW_WIDTH  1280  
 #define WINDOW_HEIGHT 1024
 
-class Tutorial35 : public ICallbacks
+#define NUM_ROWS 50
+#define NUM_COLS 20
+#define NUM_INSTANCES NUM_ROWS * NUM_COLS
+
+
+class Tutorial33 : public ICallbacks
 {
 public:
 
-    Tutorial35()
+    // Конструктор класса Tutorial33
+    Tutorial33()
     {
+        // Устанавливаем указатели на нулевые значения
         m_pGameCamera = NULL;
+        m_pEffect = NULL;
+        m_pMesh = NULL;
+        // Устанавливаем значения шкалы, параметров направленного света и матрицы проекции
         m_scale = 0.0f;
-
+        m_directionalLight.Color = Vector3f(1.0f, 1.0f, 1.0f);
+        m_directionalLight.AmbientIntensity = 0.55f;
+        m_directionalLight.DiffuseIntensity = 0.9f;
+        m_directionalLight.Direction = Vector3f(1.0f, 0.0, 0.0);
         m_persProjInfo.FOV = 60.0f;
         m_persProjInfo.Height = WINDOW_HEIGHT;
         m_persProjInfo.Width = WINDOW_WIDTH;
         m_persProjInfo.zNear = 1.0f;
         m_persProjInfo.zFar = 100.0f;
 
+        // Устанавливаем значения счетчика кадров и FPS
         m_frameCount = 0;
         m_fps = 0.0f;
-
-        m_time = glutGet(GLUT_ELAPSED_TIME);
     }
 
-    ~Tutorial35()
+    ~Tutorial33()
     {
+        SAFE_DELETE(m_pEffect);
         SAFE_DELETE(m_pGameCamera);
+        SAFE_DELETE(m_pMesh);
     }
 
+    // Определяем функцию Init, которая инициализирует объекты и переменные для приложения.
     bool Init()
     {
-        if (!m_gbuffer.Init(WINDOW_WIDTH, WINDOW_HEIGHT)) {
+        // Определяем позицию камеры - вектор Pos.
+        Vector3f Pos(7.0f, 3.0f, 0.0f);
+        // Определяем целевую точку камеры - вектор Target.
+        Vector3f Target(0.0f, -0.2f, 1.0f);
+
+        // Определяем вектор направления вверх относительно камеры - вектор Up.
+        Vector3f Up(0.0, 1.0f, 0.0f);
+
+        // Создаем новый объект Camera и инициализируем его параметрами Pos, Target и Up.
+        m_pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT, Pos, Target, Up);
+
+        // Создаем новый объект LightingTechnique, который представляет собой технику освещения.
+        m_pEffect = new LightingTechnique();
+
+        // Инициализируем объект LightingTechnique. Если инициализация не удалась, выводим сообщение об ошибке и возвращаем false.
+        if (!m_pEffect->Init()) {
+            printf("Error initializing the lighting technique\n");
             return false;
         }
 
-        m_pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);
+        // Активируем объект LightingTechnique.
+        m_pEffect->Enable();
 
-        if (!m_DSGeomPassTech.Init()) {
-            printf("Error initializing DSGeomPassTech\n");
+        // Устанавливаем текстурный юнит цвета на COLOR_TEXTURE_UNIT_INDEX.
+        m_pEffect->SetColorTextureUnit(COLOR_TEXTURE_UNIT_INDEX);
+
+        // Устанавливаем параметры направленного света.
+        m_pEffect->SetDirectionalLight(m_directionalLight);
+
+        // Устанавливаем интенсивность зеркального отражения материала.
+        m_pEffect->SetMatSpecularIntensity(0.0f);
+
+        // Устанавливаем степень зеркального отражения материала.
+        m_pEffect->SetMatSpecularPower(0);
+
+        // Задаем цвета для каждого из 4-х фрагментных шейдеров (для подсветки).
+        m_pEffect->SetColor(0, Vector4f(1.0f, 0.5f, 0.5f, 0.0f));
+        m_pEffect->SetColor(1, Vector4f(0.5f, 1.0f, 1.0f, 0.0f));
+        m_pEffect->SetColor(2, Vector4f(1.0f, 0.5f, 1.0f, 0.0f));
+        m_pEffect->SetColor(3, Vector4f(1.0f, 1.0f, 1.0f, 0.0f));
+
+        // Создаем новый объект Mesh.
+        m_pMesh = new Mesh();
+
+        // Загружаем модель паука. Если загрузка не удалась, возвращаем false.
+        if (!m_pMesh->LoadMesh("C:/Content/spider.obj")) {
             return false;
         }
-
-        m_DSGeomPassTech.Enable();
-        m_DSGeomPassTech.SetColorTextureUnit(COLOR_TEXTURE_UNIT_INDEX);
-
-        if (!m_mesh.LoadMesh("C:/Content/phoenix_ugv.md2")) {
-            return false;
-        }
-
 #ifdef FREETYPE
+        // Если определен макрос FREETYPE, то инициализируем шрифтовый рендерер, чтобы можно было выводить на экран текст.
         if (!m_fontRenderer.InitFontRenderer()) {
             return false;
         }
 #endif
+            // Инициализируем переменную m_time текущим временем.
+            m_time = glutGet(GLUT_ELAPSED_TIME);
 
+        // Вызываем функцию CalcPositions для расчета позиций объектов сцены.
+        CalcPositions();
+
+        // Возвращаем true, если все объекты и переменные были успешно инициализированы.
         return true;
     }
 
@@ -82,68 +130,69 @@ public:
     }
 
 
+    // Метод для отрисовки сцены
     virtual void RenderSceneCB()
     {
+        // Вычисляем количество кадров в секунду
         CalcFPS();
+        // Увеличиваем масштаб сцены на 0.005f
+        m_scale += 0.005f;
 
-        m_scale += 0.05f;
-
+        // Обновляем матрицу вида камеры
         m_pGameCamera->OnRender();
 
-        DSGeometryPass();
-        DSLightPass();
+        // Очищаем буфер экрана
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Включаем шейдер
+        m_pEffect->Enable();
+
+        // Устанавливаем позицию камеры в мировых координатах
+        m_pEffect->SetEyeWorldPos(m_pGameCamera->GetPos());
+
+        // Создаем объект Pipeline для установки параметров отображения
+        Pipeline p;
+
+        // Устанавливаем позицию камеры, цель, направление вверх
+        p.SetCamera(m_pGameCamera->GetPos(), m_pGameCamera->GetTarget(), m_pGameCamera->GetUp());
+
+        // Устанавливаем проекционную матрицу перспективы
+        p.SetPerspectiveProj(m_persProjInfo);
+
+        // Поворачиваем объект на 90 градусов по оси Y
+        p.Rotate(0.0f, 90.0f, 0.0f);
+
+        // Масштабируем объект
+        p.Scale(0.005f, 0.005f, 0.005f);
+
+        // Создаем массивы матриц преобразования для каждого экземпляра объекта
+        Matrix4f WVPMatrics[NUM_INSTANCES];
+        Matrix4f WorldMatrices[NUM_INSTANCES];
+
+        // Вычисляем позицию каждого экземпляра объекта на основе его начальной позиции, скорости и масштаба
+        for (unsigned int i = 0; i < NUM_INSTANCES; i++) {
+            Vector3f Pos(m_positions[i]);
+            Pos.y += sinf(m_scale) * m_velocity[i];
+            p.WorldPos(Pos);
+            // Получаем матрицы преобразования для каждого экземпляра объекта
+            WVPMatrics[i] = p.GetWVPTrans().Transpose();
+            WorldMatrices[i] = p.GetWorldTrans().Transpose();
+        }
+
+        // Отрисовываем объект на экране с использованием массивов матриц преобразования
+        m_pMesh->Render(NUM_INSTANCES, WVPMatrics, WorldMatrices);
+
+        // Отображаем количество кадров в секунду на экране
         RenderFPS();
 
+        // Обмениваем буферы для отображения сцены на экране
         glutSwapBuffers();
     }
 
-
-    void DSGeometryPass()
-    {
-        m_DSGeomPassTech.Enable();
-
-        m_gbuffer.BindForWriting();
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        Pipeline p;
-        p.Scale(0.1f, 0.1f, 0.1f);
-        p.Rotate(0.0f, m_scale, 0.0f);
-        p.WorldPos(-0.8f, -1.0f, 12.0f);
-        p.SetCamera(m_pGameCamera->GetPos(), m_pGameCamera->GetTarget(), m_pGameCamera->GetUp());
-        p.SetPerspectiveProj(m_persProjInfo);
-        m_DSGeomPassTech.SetWVP(p.GetWVPTrans());
-        m_DSGeomPassTech.SetWorldMatrix(p.GetWorldTrans());
-        m_mesh.Render();
-    }
-
-    void DSLightPass()
-    {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        m_gbuffer.BindForReading();
-
-        GLint HalfWidth = (GLint)(WINDOW_WIDTH / 2.0f);
-        GLint HalfHeight = (GLint)(WINDOW_HEIGHT / 2.0f);
-
-        m_gbuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
-        glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, HalfWidth, HalfHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-        m_gbuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE);
-        glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, HalfHeight, HalfWidth, WINDOW_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-        m_gbuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
-        glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, HalfWidth, HalfHeight, WINDOW_WIDTH, WINDOW_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-        m_gbuffer.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
-        glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, HalfWidth, 0, WINDOW_WIDTH, HalfHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-    }
-
+    // Метод для обновления сцены
     virtual void IdleCB()
     {
+        // Вызываем метод для отрисовки сцены
         RenderSceneCB();
     }
 
@@ -173,14 +222,19 @@ public:
     {
     }
 
+
 private:
 
+    // Метод для вычисления количества кадров в секунду
     void CalcFPS()
     {
+        // Увеличиваем счетчик кадров
         m_frameCount++;
 
+        // Получаем текущее время
         int time = glutGet(GLUT_ELAPSED_TIME);
 
+        // Если прошло более 1 секунды, вычисляем количество кадров в секунду
         if (time - m_time > 1000) {
             m_fps = (float)m_frameCount * 1000.0f / (time - m_time);
             m_time = time;
@@ -188,28 +242,53 @@ private:
         }
     }
 
+    // Метод для отображения количества кадров в секунду на экране
     void RenderFPS()
     {
+        // Формируем строку с количеством кадров в секунду
         char text[32];
-        ZERO_MEM(text);
-        snprintf(text, sizeof(text), "FPS: %.2f", m_fps);
+        SNPRINTF(text, sizeof(text), "FPS: %.2f", m_fps);
+
 #ifdef FREETYPE
+        // Отображаем текст с помощью шрифта FreeType
         m_fontRenderer.RenderText(10, 10, text);
 #endif
     }
 
-    DSGeomPassTech m_DSGeomPassTech;
-    Camera* m_pGameCamera;
-    float m_scale;
-    Mesh m_mesh;
-    PersProjInfo m_persProjInfo;
+    // Метод для вычисления начальных позиций и скоростей объектов
+    void CalcPositions()
+    {
+        for (unsigned int i = 0; i < NUM_ROWS; i++) {
+            for (unsigned int j = 0; j < NUM_COLS; j++) {
+                unsigned int Index = i * NUM_COLS + j;
+                // Устанавливаем начальную позицию объекта
+                m_positions[Index].x = (float)j;
+                m_positions[Index].y = RandomFloat() * 5.0f;
+                m_positions[Index].z = (float)i;
+                // Устанавливаем скорость объекта
+                m_velocity[Index] = RandomFloat();
+                if (i & 1) {
+                    m_velocity[Index] *= (-1.0f);
+                }
+            }
+        }
+    }
+
+    // Переменные класса
+    LightingTechnique* m_pEffect; // Шейдерная программа
+    Camera* m_pGameCamera; // Камера
+    float m_scale; // Масштаб сцены
+    DirectionalLight m_directionalLight; // Направленный источник света
+    Mesh* m_pMesh; // Модель объекта
+    PersProjInfo m_persProjInfo; // Параметры проекции
 #ifdef FREETYPE
-    FontRenderer m_fontRenderer;
+    FontRenderer m_fontRenderer; // Рендерер шрифта
 #endif
-    int m_time;
-    int m_frameCount;
-    float m_fps;
-    GBuffer m_gbuffer;
+    int m_time; // Время
+    int m_frameCount; // Счетчик кадров
+    float m_fps; // Количество кадров в секунду
+    Vector3f m_positions[NUM_INSTANCES]; // Массив позиций объектов
+    float m_velocity[NUM_INSTANCES]; // Массив скоростей объектов
 };
 
 
@@ -218,13 +297,13 @@ int main(int argc, char** argv)
     Magick::InitializeMagick(*argv);
     GLUTBackendInit(argc, argv);
 
-    if (!GLUTBackendCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 32, false, "Tutorial 35")) {
+    if (!GLUTBackendCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 32, false, "Tutorial 33")) {
         return 1;
     }
 
     srand;
 
-    Tutorial35* pApp = new Tutorial35();
+    Tutorial33* pApp = new Tutorial33();
 
     if (!pApp->Init()) {
         return 1;

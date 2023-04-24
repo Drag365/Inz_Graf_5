@@ -8,24 +8,30 @@ class Technique
 {
 public:
 
-    Technique(const char* pEffectFile);
+    Technique();
 
     ~Technique();
+
+    virtual bool Init();
 
     void Enable();
 
 protected:
 
-    bool CompileProgram(const char* pProgram);
+    bool AddShader(GLenum ShaderType, const char* pShaderText);
+
+    bool Finalize();
 
     GLint GetUniformLocation(const char* pUniformName);
 
     GLint GetProgramParam(GLint param);
 
+    GLuint m_shaderProg;
+
 private:
-    GLint m_effect;
-    GLint m_shaderProg;
-    const char* m_pEffectFile;
+
+    typedef std::list<GLuint> ShaderObjList;
+    ShaderObjList m_shaderObjList;
 };
 
 #define INVALID_UNIFORM_LOCATION 0xFFFFFFFF
