@@ -27,7 +27,7 @@ out vec2 TexCoord;                                                              
 void main()                                                                         \n\
 {                                                                                   \n\
     vec3 Pos = gl_in[0].gl_Position.xyz;                                            \n\
-    vec3 toCamera = normalize(gCameraPos);                                    \n\
+    vec3 toCamera = normalize(gCameraPos - Pos);                                    \n\
     vec3 up = vec3(0.0, 1.0, 0.0);                                                  \n\
     vec3 right = cross(toCamera, up);                                               \n\
                                                                                     \n\
